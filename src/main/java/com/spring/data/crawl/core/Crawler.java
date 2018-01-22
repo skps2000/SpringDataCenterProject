@@ -28,7 +28,10 @@ public class Crawler {
 	private static final Logger log = LogManager.getLogger(Crawler.class);
 	
 //	Resource r = new FileSystemResource("F:/workspace/SpringDataCenterProject/src/main/webapp/WEB-INF/spring/root-context.xml");
+	//Naver
 	Resource r = new FileSystemResource("/apps/apache-tomcat-8.0.48/webapps/SpringDataCenterProject/WEB-INF/spring/root-context.xml");
+	//Ocean
+//	Resource r = new FileSystemResource("/apps/tomcat/webapps/SpringDataCenterProject/WEB-INF/spring/root-context.xml");
 	
 	BeanFactory bf =  new XmlBeanFactory(r);
 	SqlSession sqlsession = (SqlSession) bf.getBean("sqlSession"); 
@@ -53,12 +56,13 @@ public class Crawler {
         this.urlsToCrawl.add(url);
     }
     
-    public List crawl(final HashMap pMap) {
+    public List<String> crawl(final HashMap<String, Object> pMap) {
     	
     	long curSize = 0;
         long startTime = System.currentTimeMillis();
         
-        final List<String> imgList = new ArrayList<String>();
+        final List<String> imgResultList = new ArrayList<String>();
+        final List<String> bodyResultList = new ArrayList<String>();
 
         while(this.urlsToCrawl.size() > 0) {
             
@@ -86,10 +90,10 @@ public class Crawler {
                         String contents = doc.select("div.container").text().toString();
                         String date = doc.select("div.board_body div.date").text().toString().replaceAll("/ READ.*", "");
                         
-                        log.info( writer );
-                        log.info( subJect );
-                        log.info( contents );
-                        log.info( date );
+//                        log.info( writer );
+//                        log.info( subJect );
+//                        log.info( contents );
+//                        log.info( date );
                         
                         pMap.put("mbNo", sqlsession.selectOne("selectBbsCurSeq"));
                         
@@ -101,22 +105,31 @@ public class Crawler {
                         
                         sqlsession.insert("crawMapper.insertBbs", pMap);
                         
+                        //이미지 URL저장
                         Elements images = doc.select("div.container img");
                         for(Element image : images){ 
-                        	log.info(image.attr("src"));
+//                        	log.info(image.attr("src"));
                         	pMap.put("fileName", image.attr("src").toString());
+                        	
                         	sqlsession.insert("crawMapper.insertBbsFile", pMap);
                         	
                         	if(		   !pMap.get("fileName").toString().toLowerCase().contains("ygosu") 
                         			&& !pMap.get("fileName").toString().toLowerCase().contains("todayhumor")
                         			&& !pMap.get("fileName").toString().toLowerCase().contains("jjang0u")
                         			){
-                        		imgList.add(pMap.get("fileName").toString());
+                        		imgResultList.add(pMap.get("fileName").toString());
                         	}
+                        }
+                        
+                        Elements bodies = doc.select("body");
+                        for(Element body : bodies){ 
+                        	log.info(body.text());
+                    		bodyResultList.add(body.text());
                         }
                         
                         Elements elements = doc.select("a");
                         String baseUrl = url;
+                        
                         for(Element element : elements){
                             String linkUrl       = element.attr("href");
                             String normalizedUrl = UrlNormalizer.normalize(linkUrl, baseUrl);
@@ -127,7 +140,8 @@ public class Crawler {
                 });
                 
                 curSize ++;
-                if(curSize >= Integer.parseInt(pMap.get("size").toString())) break;
+                
+                if(curSize >= Integer.parseInt(pMap.get("s").toString())) break;
                 
                 crawlJob.crawl();
                 
@@ -142,7 +156,12 @@ public class Crawler {
 
         log.info("URL's crawled: " + this.crawledUrls.size() + " in " + totalTime + " ms (avg: " + totalTime / this.crawledUrls.size() + ")");
         
-        return imgList;
+        if(null != pMap.get("flag") && 
+        		pMap.get("flag").toString().equals("i")){
+        	return imgResultList;
+        }else{
+        	return bodyResultList;
+        }
 
     }
 

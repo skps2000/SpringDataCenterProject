@@ -18,10 +18,8 @@ public class MainDao {
 	public static final Logger log = LogManager.getLogger(MainDao.class);
 	
 	public List<Object> getNow(HashMap<String,Object> pMap){
-		log.info("dao-getnow");
 		return sqlsession.selectList("mainMapper.getNow", pMap);
 	}
-	
 	
 	
 	
