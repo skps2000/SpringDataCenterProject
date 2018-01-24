@@ -58,7 +58,7 @@ public class Crawler {
     
     public List<String> crawl(final HashMap<String, Object> pMap) {
     	
-    	long curSize = 0;
+//    	long curSize = 0;
         long startTime = System.currentTimeMillis();
         
         final List<String> imgResultList = new ArrayList<String>();
@@ -74,8 +74,7 @@ public class Crawler {
             
             try {
 
-            	log.info( " URL : [ " + nextUrl + " ] ");
-            	log.info( " PROCESSING... [ " + curSize + " ]");
+            	log.info( " PROCESSING... [ " + imgResultList.size() + " ]");
             	
                 CrawlJob crawlJob = new CrawlJob(nextUrl, this.pageProcessor);
                 crawlJob.addPageProcessor(new IPageProcessor() {
@@ -90,28 +89,21 @@ public class Crawler {
                         String contents = doc.select("div.container").text().toString();
                         String date = doc.select("div.board_body div.date").text().toString().replaceAll("/ READ.*", "");
                         
-//                        log.info( writer );
-//                        log.info( subJect );
-//                        log.info( contents );
-//                        log.info( date );
-                        
                         pMap.put("mbNo", sqlsession.selectOne("selectBbsCurSeq"));
-                        
                         pMap.put("writer", writer.trim());
                         pMap.put("subject", subJect.trim());
                         pMap.put("contents", contents.trim());
                         pMap.put("date", date.trim());
                         pMap.put("original", url);
                         
-                        sqlsession.insert("crawMapper.insertBbs", pMap);
+//                        sqlsession.insert("crawMapper.insertBbs", pMap);
                         
                         //이미지 URL저장
                         Elements images = doc.select("div.container img");
                         for(Element image : images){ 
-//                        	log.info(image.attr("src"));
                         	pMap.put("fileName", image.attr("src").toString());
                         	
-                        	sqlsession.insert("crawMapper.insertBbsFile", pMap);
+//                        	sqlsession.insert("crawMapper.insertBbsFile", pMap);
                         	
                         	if(		   !pMap.get("fileName").toString().toLowerCase().contains("ygosu") 
                         			&& !pMap.get("fileName").toString().toLowerCase().contains("todayhumor")
@@ -139,10 +131,12 @@ public class Crawler {
                     }
                 });
                 
-                curSize ++;
-                
-                if(curSize >= Integer.parseInt(pMap.get("s").toString())) break;
-                
+                if(pMap.get("flag").toString().equals("i")){
+                	if(imgResultList.size() >= Integer.parseInt(pMap.get("s").toString())) break;
+                }else{
+                	if(bodyResultList.size() >= Integer.parseInt(pMap.get("s").toString())) break;
+                }
+            	   
                 crawlJob.crawl();
                 
             } catch (Exception e) {

@@ -88,7 +88,7 @@ public class MainController {
 		
 		for(String result : resultList){
 			if(null != pMap.get("flag") && pMap.get("flag").toString().equals("i")){
-				out.println("<img src=\"" + result + "\"/>");
+				out.println("<img src=\"" + result + "\"/><br>");
 			}else{
 				out.println(result);
 			}

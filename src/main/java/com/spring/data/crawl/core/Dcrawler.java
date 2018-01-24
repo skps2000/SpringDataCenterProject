@@ -85,6 +85,7 @@ public class Dcrawler {
             				.get();
             		
         			bodyResultList.add(doc.select("div.cont_inner").toString());
+        			
             	}
         } catch (Exception e) {
             e.printStackTrace();
